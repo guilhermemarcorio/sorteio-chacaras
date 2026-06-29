@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sorteio de Chácaras - Retiro Julho 2026</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -156,6 +157,7 @@
             <div class="text-center mb-20">
                 <button class="btn btn-gold btn-lg" id="btnSortear" onclick="iniciarSorteio()">Iniciar Sorteio</button>
                 <button class="btn btn-primary btn-lg" id="btnNovo" style="display:none" onclick="resetarSorteio()">Novo Sorteio</button>
+                <button class="btn btn-success btn-lg" id="btnExport" style="display:none;margin-left:12px" onclick="exportarExcel()">Exportar Excel</button>
             </div>
             <h3 class="mb-20" style="color: var(--accent-glow);">Chácaras e Datas</h3>
             <div class="slots-grid" id="slotsGrid"></div>
@@ -482,9 +484,58 @@
 
         btn.style.display = 'none';
         document.getElementById('btnNovo').style.display = 'inline-block';
+        document.getElementById('btnExport').style.display = 'inline-block';
+        lastSorteioResultados = data.resultados;
+        lastSorteioId = data.sorteio_id;
+    }
+
+    let lastSorteioResultados = [];
+    let lastSorteioId = null;
+
+    function exportarExcel() {
+        if (!lastSorteioResultados.length) return;
+        const wb = XLSX.utils.book_new();
+
+        const resultRows = [['Chácara', 'Data', 'Pastor Sorteado', 'Candidatos']];
+        lastSorteioResultados.forEach(r => {
+            resultRows.push([r.chacara, r.data, r.winner || 'Sem candidato', r.candidatos.join(', ') || '—']);
+        });
+        const wsResult = XLSX.utils.aoa_to_sheet(resultRows);
+        wsResult['!cols'] = [{wch:25},{wch:15},{wch:22},{wch:60}];
+        XLSX.utils.book_append_sheet(wb, wsResult, 'Resultado');
+
+        const resumoRows = [['Pastor', 'Chácara', 'Data']];
+        lastSorteioResultados.filter(r => r.winner).sort((a,b) => a.winner.localeCompare(b.winner)).forEach(r => {
+            resumoRows.push([r.winner, r.chacara, r.data]);
+        });
+        resumoRows.push([]);
+        const sem = cachedPastores.filter(p => !lastSorteioResultados.some(r => r.winner === p.nome)).map(p => p.nome);
+        if (sem.length) {
+            resumoRows.push(['Pastores sem chácara:']);
+            sem.forEach(n => resumoRows.push([n]));
+        }
+        const wsResumo = XLSX.utils.aoa_to_sheet(resumoRows);
+        wsResumo['!cols'] = [{wch:25},{wch:25},{wch:15}];
+        XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo');
+
+        XLSX.writeFile(wb, `Sorteio_${lastSorteioId}_Chacaras.xlsx`);
+    }
+
+    async function exportarHistorico(sorteioId) {
+        const results = await api('/api/sorteios/' + sorteioId);
+        const wb = XLSX.utils.book_new();
+        const rows = [['Chácara', 'Data', 'Pastor Sorteado', 'Candidatos']];
+        results.forEach(r => {
+            rows.push([r.chacara_nome, r.data, r.pastor_nome || 'Sem candidato', r.candidatos || '—']);
+        });
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        ws['!cols'] = [{wch:25},{wch:15},{wch:22},{wch:60}];
+        XLSX.utils.book_append_sheet(wb, ws, 'Resultado');
+        XLSX.writeFile(wb, `Sorteio_${sorteioId}_Chacaras.xlsx`);
     }
 
     function resetarSorteio() {
+        document.getElementById('btnExport').style.display = 'none';
         document.getElementById('btnSortear').style.display = 'inline-block';
         document.getElementById('btnSortear').disabled = false;
         document.getElementById('btnSortear').textContent = 'Iniciar Sorteio';
@@ -509,6 +560,7 @@
                         </div>
                         <div>
                             <span class="badge badge-green">${s.total_sorteados} sorteados</span>
+                            <button class="btn btn-success btn-sm" style="margin-left:8px" onclick="event.stopPropagation();exportarHistorico(${s.id})">Excel</button>
                             <button class="btn btn-danger btn-sm" style="margin-left:8px" onclick="event.stopPropagation();delSorteio(${s.id})">Excluir</button>
                         </div>
                     </div>
