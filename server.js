@@ -7,10 +7,15 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const dbUrl = process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL;
+const dbUrl = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL;
 console.log('Connecting to DB:', dbUrl ? dbUrl.replace(/:[^:@]+@/, ':***@') : 'NO URL SET');
 
-const pool = new Pool({ connectionString: dbUrl });
+const isProduction = process.env.NODE_ENV === 'production';
+const pool = new Pool({
+    connectionString: dbUrl,
+    ssl: isProduction ? { rejectUnauthorized: false } : false,
+    connectionTimeoutMillis: 10000,
+});
 
 async function initDB() {
     await pool.query(`
