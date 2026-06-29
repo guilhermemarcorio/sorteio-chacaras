@@ -7,8 +7,11 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+const dbUrl = process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL;
+console.log('Connecting to DB:', dbUrl ? dbUrl.replace(/:[^:@]+@/, ':***@') : 'NO URL SET');
+
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: dbUrl,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
