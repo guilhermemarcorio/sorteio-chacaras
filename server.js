@@ -1,19 +1,18 @@
 const express = require('express');
 const { Pool } = require('pg');
 const path = require('path');
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'production') require('dotenv').config();
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const dbUrl = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL;
+const dbUrl = process.env.DATABASE_URL;
 console.log('Connecting to DB:', dbUrl ? dbUrl.replace(/:[^:@]+@/, ':***@') : 'NO URL SET');
+console.log('All DB vars:', Object.keys(process.env).filter(k => k.startsWith('DATABASE')).join(', '));
 
-const isProduction = process.env.NODE_ENV === 'production';
 const pool = new Pool({
     connectionString: dbUrl,
-    ssl: isProduction ? { rejectUnauthorized: false } : false,
     connectionTimeoutMillis: 10000,
 });
 
