@@ -8,8 +8,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const dbUrl = process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL;
-console.log('Connecting to DB:', dbUrl ? dbUrl.replace(/:[^:@]+@/, ':***@') : 'NO URL SET');
-console.log('All DB vars:', Object.keys(process.env).filter(k => k.startsWith('DATABASE')).join(', '));
+console.log('DB configured:', dbUrl ? 'yes' : 'NO URL SET');
 
 const pool = new Pool({
     connectionString: dbUrl,
