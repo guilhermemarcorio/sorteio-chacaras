@@ -10,10 +10,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const dbUrl = process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL;
 console.log('Connecting to DB:', dbUrl ? dbUrl.replace(/:[^:@]+@/, ':***@') : 'NO URL SET');
 
-const pool = new Pool({
-    connectionString: dbUrl,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+const pool = new Pool({ connectionString: dbUrl });
 
 async function initDB() {
     await pool.query(`
@@ -318,7 +315,7 @@ async function start() {
             app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
             return;
         } catch (err) {
-            console.log(`DB connection attempt ${i + 1} failed, retrying in 3s...`);
+            console.log(`DB connection attempt ${i + 1} failed: ${err.message}, retrying in 3s...`);
             await new Promise(r => setTimeout(r, 3000));
         }
     }
