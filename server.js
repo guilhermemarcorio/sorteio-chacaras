@@ -13,7 +13,7 @@ console.log('All DB vars:', Object.keys(process.env).filter(k => k.startsWith('D
 
 const pool = new Pool({
     connectionString: dbUrl,
-    ssl: false,
+    ssl: { rejectUnauthorized: false },
     connectionTimeoutMillis: 10000,
 });
 
@@ -314,7 +314,7 @@ app.post('/api/seed', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 async function start() {
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
         try {
             await initDB();
             app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
@@ -324,7 +324,7 @@ async function start() {
             await new Promise(r => setTimeout(r, 3000));
         }
     }
-    console.error('Could not connect to database after 5 attempts');
+    console.error('Could not connect to database after 10 attempts');
     process.exit(1);
 }
 
