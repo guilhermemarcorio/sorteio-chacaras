@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteio de Chácaras - Retiro Julho 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+            --accent: #3b82f6; --accent-glow: #60a5fa;
+            --green: #22c55e; --green-glow: #4ade80;
+            --gold: #f59e0b; --red: #ef4444;
+            --text: #f1f5f9; --text-muted: #94a3b8; --border: #475569;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        /* NAV */
+        .nav { display: flex; justify-content: center; gap: 8px; padding: 16px; background: var(--surface); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+        .nav-btn { padding: 10px 20px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-family: inherit; font-weight: 600; font-size: 0.85rem; transition: all 0.2s; }
+        .nav-btn:hover { border-color: var(--accent); color: var(--text); }
+        .nav-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+        .header { text-align: center; padding: 30px 20px 15px; }
+        .header h1 { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, var(--accent-glow), var(--green-glow)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px; }
+        .header p { color: var(--text-muted); font-size: 0.9rem; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* CARDS & FORMS */
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+        .card h2 { font-size: 1.1rem; margin-bottom: 16px; color: var(--accent-glow); }
+        .form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+        input, select { padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: inherit; font-size: 0.9rem; outline: none; }
+        input:focus, select:focus { border-color: var(--accent); }
+        input { flex: 1; min-width: 150px; }
+
+        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 0.85rem; transition: all 0.2s; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-danger { background: var(--red); color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-success { background: var(--green); color: white; }
+        .btn-success:hover { background: #16a34a; }
+        .btn-gold { background: var(--gold); color: #1a1a1a; }
+        .btn-gold:hover { background: #d97706; }
+        .btn-sm { padding: 6px 12px; font-size: 0.75rem; }
+        .btn-lg { padding: 16px 48px; font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase; }
+
+        /* TABLE */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { background: var(--surface2); color: var(--text-muted); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; padding: 10px 14px; text-align: left; }
+        td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        tr:hover td { background: rgba(59, 130, 246, 0.05); }
+
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .badge-green { background: rgba(34,197,94,0.15); color: var(--green-glow); }
+        .badge-red { background: rgba(239,68,68,0.15); color: #f87171; }
+        .badge-blue { background: rgba(59,130,246,0.15); color: var(--accent-glow); }
+
+        /* CHIPS */
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .chip { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; border: 1px solid var(--border); background: var(--surface2); cursor: pointer; transition: all 0.2s; user-select: none; }
+        .chip:hover { border-color: var(--accent); }
+        .chip.selected { background: var(--accent); border-color: var(--accent); color: white; }
+
+        /* STATS */
+        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+        .stat-card .number { font-size: 2rem; font-weight: 800; color: var(--accent-glow); }
+        .stat-card .label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+        /* SORTEIO */
+        .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-bottom: 30px; }
+        .slot-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; transition: all 0.5s; position: relative; }
+        .slot-card.sorteando { border-color: var(--gold); box-shadow: 0 0 20px rgba(245,158,11,0.3); animation: pulse 0.5s ease-in-out infinite; }
+        .slot-card.sorteado { border-color: var(--green); background: linear-gradient(135deg, rgba(34,197,94,0.08), var(--surface)); }
+        .slot-card.sem-candidato { opacity: 0.5; }
+        @keyframes pulse { 0%,100% { box-shadow: 0 0 20px rgba(245,158,11,0.2); } 50% { box-shadow: 0 0 30px rgba(245,158,11,0.5); } }
+        .slot-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .slot-chacara { font-weight: 700; font-size: 0.95rem; }
+        .slot-data { font-size: 0.75rem; color: var(--accent-glow); background: rgba(59,130,246,0.15); padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+        .slot-candidatos { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; }
+        .slot-winner { font-size: 1rem; font-weight: 700; color: var(--green-glow); min-height: 28px; display: flex; align-items: center; gap: 6px; }
+        .roulette-name { color: var(--gold); font-weight: 700; }
+
+        /* LOG */
+        .log-container { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; max-height: 400px; overflow-y: auto; }
+        .log-entry { padding: 8px 12px; border-radius: 8px; margin-bottom: 4px; font-size: 0.85rem; border-left: 3px solid transparent; animation: fadeIn 0.3s; }
+        .log-entry.winner { background: rgba(34,197,94,0.08); border-left-color: var(--green); }
+        .log-entry.no-candidate { background: rgba(148,163,184,0.05); border-left-color: var(--text-muted); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .log-slot { font-weight: 600; color: var(--accent-glow); }
+        .log-winner-name { font-weight: 700; color: var(--green-glow); }
+        .log-count { color: var(--text-muted); font-size: 0.75rem; }
+
+        /* PARTICIPANTS GRID */
+        .participants-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-bottom: 30px; }
+        .participant-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; transition: all 0.5s; }
+        .participant-card.won { border-color: var(--green); background: linear-gradient(135deg, rgba(34,197,94,0.08), var(--surface)); }
+        .participant-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+        .participant-card.won .participant-avatar { background: var(--green); }
+        .participant-info .name { font-weight: 600; font-size: 0.9rem; }
+        .participant-info .status { font-size: 0.7rem; color: var(--text-muted); margin-top: 1px; }
+        .participant-card.won .status { color: var(--green-glow); }
+
+        .text-center { text-align: center; }
+        .mt-20 { margin-top: 20px; }
+        .mb-20 { margin-bottom: 20px; }
+        .text-muted { color: var(--text-muted); }
+        .empty-msg { text-align: center; padding: 40px; color: var(--text-muted); }
+
+        /* HISTORICO */
+        .historico-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; cursor: pointer; transition: all 0.2s; }
+        .historico-card:hover { border-color: var(--accent); }
+        .historico-header { display: flex; justify-content: space-between; align-items: center; }
+        .historico-details { display: none; margin-top: 16px; }
+        .historico-card.open .historico-details { display: block; }
+
+        .footer { text-align: center; padding: 24px; color: var(--text-muted); font-size: 0.75rem; border-top: 1px solid var(--border); margin-top: 40px; }
+
+        .toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 24px; border-radius: 10px; font-size: 0.9rem; font-weight: 500; z-index: 1000; animation: fadeIn 0.3s; }
+        .toast-success { background: var(--green); color: white; }
+        .toast-error { background: var(--red); color: white; }
+
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.3rem; }
+            .slots-grid, .participants-grid { grid-template-columns: 1fr; }
+            .nav { gap: 4px; }
+            .nav-btn { padding: 8px 12px; font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Sorteio de Chácaras</h1>
+        <p>Retiro da Igreja Videira - Julho 2026</p>
+    </div>
+
+    <nav class="nav">
+        <button class="nav-btn active" onclick="showPage('sorteio')">Sorteio</button>
+        <button class="nav-btn" onclick="showPage('chacaras')">Chácaras</button>
+        <button class="nav-btn" onclick="showPage('pastores')">Pastores</button>
+        <button class="nav-btn" onclick="showPage('historico')">Histórico</button>
+    </nav>
+
+    <div class="container">
+        <!-- PAGE: SORTEIO -->
+        <div class="page active" id="page-sorteio">
+            <div class="stats-bar" id="statsBar"></div>
+            <div class="text-center mb-20">
+                <button class="btn btn-gold btn-lg" id="btnSortear" onclick="iniciarSorteio()">Iniciar Sorteio</button>
+                <button class="btn btn-primary btn-lg" id="btnNovo" style="display:none" onclick="resetarSorteio()">Novo Sorteio</button>
+            </div>
+            <h3 class="mb-20" style="color: var(--accent-glow);">Chácaras e Datas</h3>
+            <div class="slots-grid" id="slotsGrid"></div>
+            <h3 class="mb-20" style="color: var(--accent-glow);">Participantes</h3>
+            <div class="participants-grid" id="participantsGrid"></div>
+            <h3 class="mb-20" style="color: var(--accent-glow);">Registro do Sorteio</h3>
+            <div class="log-container" id="logContainer">
+                <p class="empty-msg">Clique em "Iniciar Sorteio" para começar</p>
+            </div>
+        </div>
+
+        <!-- PAGE: CHACARAS -->
+        <div class="page" id="page-chacaras">
+            <div class="card">
+                <h2>Adicionar Chácara</h2>
+                <div class="form-row">
+                    <input type="text" id="inputChacara" placeholder="Nome da chácara">
+                    <button class="btn btn-primary" onclick="addChacara()">Adicionar</button>
+                </div>
+            </div>
+            <div class="card">
+                <h2>Chácaras Cadastradas</h2>
+                <div class="table-wrap"><table id="tblChacaras"><thead><tr><th>Nome</th><th>Ações</th></tr></thead><tbody></tbody></table></div>
+            </div>
+            <div class="card">
+                <h2>Gerenciar Slots (Chácara + Data)</h2>
+                <div class="form-row">
+                    <select id="selSlotChacara"></select>
+                    <input type="text" id="inputSlotData" placeholder="Ex: 03 e 05/07">
+                    <button class="btn btn-primary" onclick="addSlot()">Adicionar Slot</button>
+                </div>
+            </div>
+            <div class="card">
+                <h2>Slots Disponíveis</h2>
+                <div class="table-wrap"><table id="tblSlots"><thead><tr><th>Chácara</th><th>Data</th><th>Status</th><th>Ações</th></tr></thead><tbody></tbody></table></div>
+            </div>
+        </div>
+
+        <!-- PAGE: PASTORES -->
+        <div class="page" id="page-pastores">
+            <div class="card">
+                <h2>Adicionar Pastor</h2>
+                <div class="form-row">
+                    <input type="text" id="inputPastor" placeholder="Nome do pastor">
+                    <button class="btn btn-primary" onclick="addPastor()">Adicionar</button>
+                </div>
+            </div>
+            <div class="card">
+                <h2>Pastores e Preferências</h2>
+                <div id="pastoresList"></div>
+            </div>
+        </div>
+
+        <!-- PAGE: HISTORICO -->
+        <div class="page" id="page-historico">
+            <div class="card">
+                <h2>Histórico de Sorteios</h2>
+                <div id="historicoList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Igreja Videira &bull; Sistema de Sorteio de Chácaras &bull; Cada pastor só pode ganhar uma chácara por sorteio
+    </div>
+
+    <script>
+    const API = '';
+    let cachedSlots = [];
+    let cachedPastores = [];
+    let cachedChacaras = [];
+
+    // === NAV ===
+    function showPage(name) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('page-' + name).classList.add('active');
+        document.querySelector(`.nav-btn[onclick="showPage('${name}')"]`).classList.add('active');
+        if (name === 'chacaras') loadChacaras();
+        if (name === 'pastores') loadPastores();
+        if (name === 'sorteio') loadSorteioPage();
+        if (name === 'historico') loadHistorico();
+    }
+
+    function toast(msg, type = 'success') {
+        const t = document.createElement('div');
+        t.className = `toast toast-${type}`;
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+
+    async function api(url, opts = {}) {
+        opts.headers = { 'Content-Type': 'application/json', ...opts.headers };
+        if (opts.body && typeof opts.body === 'object') opts.body = JSON.stringify(opts.body);
+        const res = await fetch(API + url, opts);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro');
+        return data;
+    }
+
+    // === CHACARAS ===
+    async function loadChacaras() {
+        cachedChacaras = await api('/api/chacaras');
+        const tbody = document.querySelector('#tblChacaras tbody');
+        tbody.innerHTML = cachedChacaras.map(c => `
+            <tr>
+                <td>${c.nome}</td>
+                <td><button class="btn btn-danger btn-sm" onclick="delChacara(${c.id})">Remover</button></td>
+            </tr>
+        `).join('');
+        const sel = document.getElementById('selSlotChacara');
+        sel.innerHTML = cachedChacaras.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+        loadSlots();
+    }
+
+    async function addChacara() {
+        const input = document.getElementById('inputChacara');
+        if (!input.value.trim()) return;
+        try { await api('/api/chacaras', { method: 'POST', body: { nome: input.value.trim() } }); input.value = ''; toast('Chácara adicionada'); loadChacaras(); }
+        catch (e) { toast(e.message, 'error'); }
+    }
+
+    async function delChacara(id) {
+        if (!confirm('Remover esta chácara e todos seus slots?')) return;
+        await api('/api/chacaras/' + id, { method: 'DELETE' });
+        toast('Chácara removida'); loadChacaras();
+    }
+
+    // === SLOTS ===
+    async function loadSlots() {
+        cachedSlots = await api('/api/slots');
+        const tbody = document.querySelector('#tblSlots tbody');
+        tbody.innerHTML = cachedSlots.map(s => `
+            <tr>
+                <td>${s.chacara_nome}</td>
+                <td>${s.data}</td>
+                <td><span class="badge ${s.disponivel ? 'badge-green' : 'badge-red'}">${s.disponivel ? 'Disponível' : 'Indisponível'}</span></td>
+                <td>
+                    <button class="btn ${s.disponivel ? 'btn-danger' : 'btn-success'} btn-sm" onclick="toggleSlot(${s.id}, ${!s.disponivel})">
+                        ${s.disponivel ? 'Desabilitar' : 'Habilitar'}
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="delSlot(${s.id})">Excluir</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function addSlot() {
+        const chacara_id = document.getElementById('selSlotChacara').value;
+        const data = document.getElementById('inputSlotData').value.trim();
+        if (!data) return;
+        try { await api('/api/slots', { method: 'POST', body: { chacara_id, data } }); document.getElementById('inputSlotData').value = ''; toast('Slot adicionado'); loadSlots(); }
+        catch (e) { toast(e.message, 'error'); }
+    }
+
+    async function toggleSlot(id, disponivel) {
+        await api('/api/slots/' + id, { method: 'PATCH', body: { disponivel } });
+        loadSlots();
+    }
+
+    async function delSlot(id) {
+        await api('/api/slots/' + id, { method: 'DELETE' });
+        toast('Slot removido'); loadSlots();
+    }
+
+    // === PASTORES ===
+    async function loadPastores() {
+        cachedSlots = await api('/api/slots');
+        cachedPastores = await api('/api/pastores');
+        const div = document.getElementById('pastoresList');
+        if (cachedPastores.length === 0) { div.innerHTML = '<p class="empty-msg">Nenhum pastor cadastrado</p>'; return; }
+
+        div.innerHTML = cachedPastores.map(p => {
+            const prefIds = p.preferencias.map(pr => pr.slot_id);
+            return `
+                <div class="card" style="margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <strong>${p.nome}</strong>
+                        <button class="btn btn-danger btn-sm" onclick="delPastor(${p.id})">Remover</button>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">Selecione as chácaras/datas de interesse:</div>
+                    <div class="chips" id="chips-${p.id}">
+                        ${cachedSlots.filter(s => s.disponivel).map(s =>
+                            `<span class="chip ${prefIds.includes(s.id) ? 'selected' : ''}" data-slot="${s.id}" onclick="toggleChip(this, ${p.id})">${s.chacara_nome} ${s.data}</span>`
+                        ).join('')}
+                    </div>
+                    <button class="btn btn-primary btn-sm mt-20" onclick="savePrefs(${p.id})">Salvar Preferências</button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function toggleChip(el) {
+        el.classList.toggle('selected');
+    }
+
+    async function savePrefs(pastor_id) {
+        const chips = document.querySelectorAll(`#chips-${pastor_id} .chip.selected`);
+        const slot_ids = Array.from(chips).map(c => parseInt(c.dataset.slot));
+        await api('/api/preferencias', { method: 'POST', body: { pastor_id, slot_ids } });
+        toast('Preferências salvas');
+    }
+
+    async function addPastor() {
+        const input = document.getElementById('inputPastor');
+        if (!input.value.trim()) return;
+        try { await api('/api/pastores', { method: 'POST', body: { nome: input.value.trim() } }); input.value = ''; toast('Pastor adicionado'); loadPastores(); }
+        catch (e) { toast(e.message, 'error'); }
+    }
+
+    async function delPastor(id) {
+        if (!confirm('Remover este pastor?')) return;
+        await api('/api/pastores/' + id, { method: 'DELETE' });
+        toast('Pastor removido'); loadPastores();
+    }
+
+    // === SORTEIO PAGE ===
+    async function loadSorteioPage() {
+        cachedSlots = await api('/api/slots');
+        cachedPastores = await api('/api/pastores');
+        const availSlots = cachedSlots.filter(s => s.disponivel);
+
+        document.getElementById('statsBar').innerHTML = `
+            <div class="stat-card"><div class="number">${cachedPastores.length}</div><div class="label">Pastores</div></div>
+            <div class="stat-card"><div class="number">${new Set(cachedSlots.map(s => s.chacara_nome)).size}</div><div class="label">Chácaras</div></div>
+            <div class="stat-card"><div class="number">${availSlots.length}</div><div class="label">Vagas</div></div>
+            <div class="stat-card"><div class="number" id="statSorteados">0</div><div class="label">Sorteados</div></div>
+        `;
+
+        document.getElementById('slotsGrid').innerHTML = availSlots.map((s, i) => {
+            const cands = cachedPastores.filter(p => p.preferencias.some(pr => pr.slot_id === s.id));
+            return `
+                <div class="slot-card" id="slot-${i}">
+                    <div class="slot-header">
+                        <span class="slot-chacara">${s.chacara_nome}</span>
+                        <span class="slot-data">${s.data}</span>
+                    </div>
+                    <div class="slot-candidatos">${cands.length} candidato(s): ${cands.map(c => c.nome).join(', ') || 'Nenhum'}</div>
+                    <div class="slot-winner" id="sw-${i}">—</div>
+                </div>
+            `;
+        }).join('');
+
+        renderParticipants({});
+    }
+
+    function renderParticipants(won) {
+        document.getElementById('participantsGrid').innerHTML = cachedPastores.map(p => {
+            const w = won[p.nome];
+            return `
+                <div class="participant-card ${w ? 'won' : ''}">
+                    <div class="participant-avatar" ${w ? 'style="background:var(--green)"' : ''}>${p.nome.charAt(0)}</div>
+                    <div class="participant-info">
+                        <div class="name">${p.nome}</div>
+                        <div class="status">${w || p.preferencias.length + ' opções'}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    async function animarRoleta(idx, candidatos, vencedor) {
+        const el = document.getElementById('sw-' + idx);
+        const card = document.getElementById('slot-' + idx);
+        card.classList.add('sorteando');
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        const rounds = 15 + Math.floor(Math.random() * 10);
+        for (let i = 0; i < rounds; i++) {
+            el.innerHTML = `<span class="roulette-name">${candidatos[i % candidatos.length]}</span>`;
+            await sleep(60 + i * 15);
+        }
+        el.innerHTML = `<span style="font-size:1.2rem">🏆</span> ${vencedor}`;
+        card.classList.remove('sorteando');
+        card.classList.add('sorteado');
+    }
+
+    async function iniciarSorteio() {
+        const btn = document.getElementById('btnSortear');
+        btn.disabled = true; btn.textContent = 'Sorteando...';
+
+        let data;
+        try { data = await api('/api/sortear', { method: 'POST' }); }
+        catch (e) { toast('Erro ao sortear: ' + e.message, 'error'); btn.disabled = false; btn.textContent = 'Iniciar Sorteio'; return; }
+
+        const log = document.getElementById('logContainer');
+        log.innerHTML = '';
+        const won = {};
+        let count = 0;
+
+        const availSlots = cachedSlots.filter(s => s.disponivel);
+
+        for (let i = 0; i < data.resultados.length; i++) {
+            const r = data.resultados[i];
+            if (r.candidatos.length === 0) {
+                const card = document.getElementById('slot-' + i);
+                card.classList.add('sem-candidato');
+                document.getElementById('sw-' + i).innerHTML = '<span style="color:var(--text-muted);font-size:0.85rem">Sem candidato</span>';
+                log.innerHTML += `<div class="log-entry no-candidate"><span class="log-slot">${r.chacara} ${r.data}</span> — Nenhum candidato disponível</div>`;
+                log.scrollTop = log.scrollHeight;
+                await sleep(200);
+                continue;
+            }
+
+            await animarRoleta(i, r.candidatos, r.winner);
+            won[r.winner] = `${r.chacara} ${r.data}`;
+            count++;
+            document.getElementById('statSorteados').textContent = count;
+            renderParticipants(won);
+
+            log.innerHTML += `<div class="log-entry winner"><span class="log-slot">${r.chacara} ${r.data}</span> — <span class="log-winner-name">${r.winner}</span> <span class="log-count">(${r.candidatos.length} candidato${r.candidatos.length > 1 ? 's' : ''}: ${r.candidatos.join(', ')})</span></div>`;
+            log.scrollTop = log.scrollHeight;
+            await sleep(400);
+        }
+
+        const sem = cachedPastores.filter(p => !won[p.nome]).map(p => p.nome);
+        if (sem.length) {
+            log.innerHTML += `<div class="log-entry" style="background:rgba(239,68,68,0.08);border-left-color:var(--red);margin-top:12px"><strong>Pastores sem chácara:</strong> ${sem.join(', ')}</div>`;
+        }
+        log.innerHTML += `<div class="log-entry" style="background:rgba(59,130,246,0.08);border-left-color:var(--accent);margin-top:8px;text-align:center"><strong>Sorteio #${data.sorteio_id} concluído!</strong> ${count} pastores sorteados.</div>`;
+
+        btn.style.display = 'none';
+        document.getElementById('btnNovo').style.display = 'inline-block';
+    }
+
+    function resetarSorteio() {
+        document.getElementById('btnSortear').style.display = 'inline-block';
+        document.getElementById('btnSortear').disabled = false;
+        document.getElementById('btnSortear').textContent = 'Iniciar Sorteio';
+        document.getElementById('btnNovo').style.display = 'none';
+        loadSorteioPage();
+    }
+
+    // === HISTORICO ===
+    async function loadHistorico() {
+        const sorteios = await api('/api/sorteios');
+        const div = document.getElementById('historicoList');
+        if (sorteios.length === 0) { div.innerHTML = '<p class="empty-msg">Nenhum sorteio realizado ainda</p>'; return; }
+
+        div.innerHTML = sorteios.map(s => {
+            const dt = new Date(s.realizado_em);
+            return `
+                <div class="historico-card" id="hist-${s.id}" onclick="toggleHistorico(${s.id})">
+                    <div class="historico-header">
+                        <div>
+                            <strong>Sorteio #${s.id}</strong>
+                            <span class="text-muted" style="margin-left:12px">${dt.toLocaleDateString('pt-BR')} ${dt.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</span>
+                        </div>
+                        <div>
+                            <span class="badge badge-green">${s.total_sorteados} sorteados</span>
+                            <button class="btn btn-danger btn-sm" style="margin-left:8px" onclick="event.stopPropagation();delSorteio(${s.id})">Excluir</button>
+                        </div>
+                    </div>
+                    <div class="historico-details" id="histdet-${s.id}"></div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function toggleHistorico(id) {
+        const card = document.getElementById('hist-' + id);
+        const det = document.getElementById('histdet-' + id);
+        if (card.classList.contains('open')) { card.classList.remove('open'); return; }
+        card.classList.add('open');
+
+        const results = await api('/api/sorteios/' + id);
+        det.innerHTML = `<table><thead><tr><th>Chácara</th><th>Data</th><th>Sorteado</th><th>Candidatos</th></tr></thead><tbody>
+            ${results.map(r => `<tr><td>${r.chacara_nome}</td><td>${r.data}</td><td><strong style="color:${r.pastor_nome ? 'var(--green-glow)' : 'var(--text-muted)'}">${r.pastor_nome || 'Sem candidato'}</strong></td><td style="font-size:0.75rem;color:var(--text-muted)">${r.candidatos || '—'}</td></tr>`).join('')}
+        </tbody></table>`;
+    }
+
+    async function delSorteio(id) {
+        if (!confirm('Excluir este sorteio?')) return;
+        await api('/api/sorteios/' + id, { method: 'DELETE' });
+        toast('Sorteio excluído'); loadHistorico();
+    }
+
+    // === INIT ===
+    loadSorteioPage();
+    </script>
+</body>
+</html>

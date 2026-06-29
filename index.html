@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteio de Chácaras - Retiro Julho 2026</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface2: #334155;
+            --accent: #3b82f6;
+            --accent-glow: #60a5fa;
+            --green: #22c55e;
+            --green-glow: #4ade80;
+            --gold: #f59e0b;
+            --red: #ef4444;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #475569;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-glow), var(--green-glow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent-glow);
+        }
+
+        .stat-card .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        .btn-sortear {
+            display: block;
+            margin: 0 auto 30px;
+            padding: 16px 48px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, var(--accent), #2563eb);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn-sortear:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-sortear:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-reset {
+            display: none;
+            margin: 0 auto 30px;
+            padding: 12px 36px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-reset:hover {
+            background: var(--surface);
+            border-color: var(--accent);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent);
+            display: inline-block;
+        }
+
+        /* Slots grid */
+        .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .slot-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.5s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slot-card.sorteando {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+            animation: pulse-border 0.5s ease-in-out infinite;
+        }
+
+        .slot-card.sorteado {
+            border-color: var(--green);
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), var(--surface));
+        }
+
+        .slot-card.sem-candidato {
+            border-color: var(--border);
+            opacity: 0.5;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.2); }
+            50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.5); }
+        }
+
+        .slot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .slot-chacara {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .slot-data {
+            font-size: 0.8rem;
+            color: var(--accent-glow);
+            background: rgba(59, 130, 246, 0.15);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .slot-candidatos {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .slot-winner {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--green-glow);
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .slot-winner .trophy { font-size: 1.2rem; }
+
+        .roulette-name {
+            display: inline-block;
+            color: var(--gold);
+            font-weight: 700;
+            font-size: 1.1rem;
+            min-width: 150px;
+        }
+
+        /* Participants */
+        .participants-section { margin-bottom: 40px; }
+
+        .participants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        .participant-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.5s;
+        }
+
+        .participant-card.won {
+            border-color: var(--green);
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), var(--surface));
+        }
+
+        .participant-card.eliminated {
+            opacity: 0.4;
+            border-color: var(--red);
+        }
+
+        .participant-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .participant-card.won .participant-avatar {
+            background: var(--green);
+        }
+
+        .participant-info .name { font-weight: 600; font-size: 0.95rem; }
+        .participant-info .status {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .participant-card.won .status { color: var(--green-glow); }
+
+        /* Log */
+        .log-section { margin-bottom: 40px; }
+
+        .log-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            animation: fadeIn 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .log-entry.winner {
+            background: rgba(34, 197, 94, 0.1);
+            border-left-color: var(--green);
+        }
+
+        .log-entry.no-candidate {
+            background: rgba(148, 163, 184, 0.1);
+            border-left-color: var(--text-muted);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .log-entry .log-slot { font-weight: 600; color: var(--accent-glow); }
+        .log-entry .log-winner-name { font-weight: 700; color: var(--green-glow); }
+        .log-entry .log-count { color: var(--text-muted); font-size: 0.8rem; }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+        }
+
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.4rem; }
+            .slots-grid { grid-template-columns: 1fr; }
+            .participants-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Sorteio de Chácaras</h1>
+        <p>Retiro da Igreja Videira - Julho 2026</p>
+    </div>
+
+    <div class="container">
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="number" id="stat-pastores">0</div>
+                <div class="label">Pastores</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="stat-chacaras">0</div>
+                <div class="label">Chácaras</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="stat-slots">0</div>
+                <div class="label">Vagas</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="stat-sorteados">0</div>
+                <div class="label">Sorteados</div>
+            </div>
+        </div>
+
+        <button class="btn-sortear" id="btnSortear" onclick="iniciarSorteio()">Iniciar Sorteio</button>
+        <button class="btn-reset" id="btnReset" onclick="resetar()">Novo Sorteio</button>
+
+        <div>
+            <h2 class="section-title">Chácaras e Datas</h2>
+        </div>
+        <div class="slots-grid" id="slotsGrid"></div>
+
+        <div class="participants-section">
+            <h2 class="section-title">Participantes</h2>
+            <div class="participants-grid" id="participantsGrid"></div>
+        </div>
+
+        <div class="log-section">
+            <h2 class="section-title">Registro do Sorteio</h2>
+            <div class="log-container" id="logContainer">
+                <p style="color: var(--text-muted); text-align: center; padding: 20px;">
+                    Clique em "Iniciar Sorteio" para começar
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Igreja Videira &bull; Sorteio realizado com transparência &bull; Cada pastor só pode ganhar uma chácara
+    </div>
+
+    <script>
+        const PASTORES_DATA = {
+            "Luis Queiroz": ["Vinho Novo 24 e 26/07", "Vinhedo 24 e 26/07"],
+            "Gabriel Santana": ["Recanto da Videira 10 e 12/07", "Monte Sião 1 10 e 12/07", "Monte Sião 2 10 e 12/07", "Vinho Novo 10 e 12/07", "Vinhedo 10 e 12/07"],
+            "Micael Vogel": ["Recanto da Videira 10 e 12/07", "Recanto da Videira 17 e 19/07", "Monte Sião 1 10 e 12/07", "Monte Sião 1 17 e 19/07", "Monte Sião 2 10 e 12/07", "Monte Sião 2 17 e 19/07", "Vinhedo 10 e 12/07", "Vinhedo 17 e 19/07"],
+            "Cleibson Marciano": ["Recanto da Videira 03 e 05/07", "Recanto da Videira 10 e 12/07", "Recanto da Videira 17 e 19/07", "Monte Sião 1 10 e 12/07", "Monte Sião 1 17 e 19/07", "Monte Sião 1 24 e 26/07", "Monte Sião 2 10 e 12/07", "Monte Sião 2 17 e 19/07", "Monte Sião 2 24 e 26/07", "Vinho Novo 03 e 05/07", "Vinho Novo 10 e 12/07", "Vinho Novo 17 e 19/07", "Vinho Novo 24 e 26/07", "Vinhedo 03 e 05/07", "Vinhedo 10 e 12/07", "Vinhedo 17 e 19/07", "Vinhedo 24 e 26/07"],
+            "Victor Luis": ["Recanto da Videira 10 e 12/07"],
+            "Leandro Feliciano": ["Recanto da Videira 10 e 12/07", "Recanto da Videira 17 e 19/07", "Monte Sião 1 10 e 12/07", "Monte Sião 1 17 e 19/07", "Monte Sião 1 24 e 26/07", "Monte Sião 2 10 e 12/07", "Monte Sião 2 17 e 19/07", "Monte Sião 2 24 e 26/07", "Vinho Novo 24 e 26/07", "Vinhedo 24 e 26/07"],
+            "Marcos Vinícius": ["Recanto da Videira 10 e 12/07", "Recanto da Videira 17 e 19/07", "Monte Sião 1 10 e 12/07", "Monte Sião 1 17 e 19/07", "Monte Sião 1 24 e 26/07", "Monte Sião 2 10 e 12/07", "Monte Sião 2 17 e 19/07", "Monte Sião 2 24 e 26/07", "Vinhedo 10 e 12/07", "Vinhedo 17 e 19/07", "Vinhedo 24 e 26/07"],
+            "Paulo Henrique": ["Recanto da Videira 17 e 19/07"],
+            "Vinicius": ["Recanto da Videira 10 e 12/07", "Monte Sião 1 10 e 12/07"],
+            "Obr Jonhy Henrique": ["Recanto da Videira 17 e 19/07", "Monte Sião 1 24 e 26/07", "Monte Sião 2 24 e 26/07", "Vinhedo 24 e 26/07"],
+            "Djalma Madureira": ["Monte Sião 1 24 e 26/07", "Monte Sião 2 24 e 26/07"],
+            "Ramon": ["Recanto da Videira 03 e 05/07", "Recanto da Videira 10 e 12/07", "Recanto da Videira 17 e 19/07", "Monte Sião 1 10 e 12/07", "Monte Sião 2 10 e 12/07", "Monte Sião 2 17 e 19/07"]
+        };
+
+        // Slots indisponiveis: Monte Sião 1 e 2 no 03 e 05/07
+        const SLOTS_INDISPONIVEIS = [
+            "Monte Sião 1 03 e 05/07",
+            "Monte Sião 2 03 e 05/07"
+        ];
+
+        const CHACARAS = ["Recanto da Videira", "Monte Sião 1", "Monte Sião 2", "Vinho Novo", "Vinhedo"];
+        const DATAS = ["03 e 05/07", "10 e 12/07", "17 e 19/07", "24 e 26/07"];
+
+        let slots = [];
+        let sorteioConcluido = false;
+
+        function parseSlot(s) {
+            for (const d of DATAS) {
+                if (s.endsWith(d)) {
+                    return { chacara: s.slice(0, -(d.length)).trim(), data: d };
+                }
+            }
+            return null;
+        }
+
+        function buildSlots() {
+            slots = [];
+            for (const ch of CHACARAS) {
+                for (const dt of DATAS) {
+                    const key = `${ch} ${dt}`;
+                    if (SLOTS_INDISPONIVEIS.includes(key)) continue;
+                    const candidatos = Object.keys(PASTORES_DATA).filter(p =>
+                        PASTORES_DATA[p].includes(key)
+                    );
+                    slots.push({ chacara: ch, data: dt, key, candidatos, winner: null });
+                }
+            }
+        }
+
+        function renderSlots() {
+            const grid = document.getElementById('slotsGrid');
+            grid.innerHTML = slots.map((s, i) => `
+                <div class="slot-card" id="slot-${i}">
+                    <div class="slot-header">
+                        <span class="slot-chacara">${s.chacara}</span>
+                        <span class="slot-data">${s.data}</span>
+                    </div>
+                    <div class="slot-candidatos">${s.candidatos.length} candidato(s): ${s.candidatos.join(', ') || 'Nenhum'}</div>
+                    <div class="slot-winner" id="slot-winner-${i}">
+                        ${s.winner ? `<span class="trophy">🏆</span> ${s.winner}` : '—'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderParticipants(won = {}) {
+            const grid = document.getElementById('participantsGrid');
+            const names = Object.keys(PASTORES_DATA).sort();
+            grid.innerHTML = names.map(name => {
+                const initial = name.charAt(0).toUpperCase();
+                const status = won[name] ? `Ganhou: ${won[name]}` : `${PASTORES_DATA[name].length} opções`;
+                const cls = won[name] ? 'won' : '';
+                return `
+                    <div class="participant-card ${cls}" id="part-${name.replace(/\s/g, '_')}">
+                        <div class="participant-avatar">${initial}</div>
+                        <div class="participant-info">
+                            <div class="name">${name}</div>
+                            <div class="status">${status}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateStats(sorteados = 0) {
+            document.getElementById('stat-pastores').textContent = Object.keys(PASTORES_DATA).length;
+            document.getElementById('stat-chacaras').textContent = CHACARAS.length;
+            document.getElementById('stat-slots').textContent = slots.length;
+            document.getElementById('stat-sorteados').textContent = sorteados;
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        async function animarRoleta(slotIndex, candidatos, vencedor) {
+            const el = document.getElementById(`slot-winner-${slotIndex}`);
+            const card = document.getElementById(`slot-${slotIndex}`);
+            card.classList.add('sorteando');
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            const rounds = 15 + Math.floor(Math.random() * 10);
+            for (let i = 0; i < rounds; i++) {
+                const nome = candidatos[i % candidatos.length];
+                el.innerHTML = `<span class="roulette-name">${nome}</span>`;
+                const delay = 60 + (i * 15);
+                await sleep(delay);
+            }
+
+            el.innerHTML = `<span class="trophy">🏆</span> ${vencedor}`;
+            card.classList.remove('sorteando');
+            card.classList.add('sorteado');
+        }
+
+        async function iniciarSorteio() {
+            const btn = document.getElementById('btnSortear');
+            btn.disabled = true;
+            btn.textContent = 'Sorteando...';
+
+            const logContainer = document.getElementById('logContainer');
+            logContainer.innerHTML = '';
+
+            const won = {};
+            const wonSet = new Set();
+            let sorteadosCount = 0;
+
+            for (let i = 0; i < slots.length; i++) {
+                const slot = slots[i];
+                const candidatosDisponiveis = slot.candidatos.filter(p => !wonSet.has(p));
+
+                if (candidatosDisponiveis.length === 0) {
+                    const card = document.getElementById(`slot-${i}`);
+                    card.classList.add('sem-candidato');
+                    document.getElementById(`slot-winner-${i}`).innerHTML =
+                        '<span style="color: var(--text-muted); font-size: 0.9rem;">Sem candidato disponível</span>';
+
+                    logContainer.innerHTML += `
+                        <div class="log-entry no-candidate">
+                            <span class="log-slot">${slot.chacara} ${slot.data}</span> — Nenhum candidato disponível
+                        </div>`;
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                    await sleep(300);
+                    continue;
+                }
+
+                const vencedor = candidatosDisponiveis[Math.floor(Math.random() * candidatosDisponiveis.length)];
+
+                await animarRoleta(i, candidatosDisponiveis, vencedor);
+
+                slot.winner = vencedor;
+                won[vencedor] = `${slot.chacara} ${slot.data}`;
+                wonSet.add(vencedor);
+                sorteadosCount++;
+                updateStats(sorteadosCount);
+                renderParticipants(won);
+
+                logContainer.innerHTML += `
+                    <div class="log-entry winner">
+                        <span class="log-slot">${slot.chacara} ${slot.data}</span> —
+                        <span class="log-winner-name">${vencedor}</span>
+                        <span class="log-count">(${candidatosDisponiveis.length} candidato${candidatosDisponiveis.length > 1 ? 's' : ''}: ${candidatosDisponiveis.join(', ')})</span>
+                    </div>`;
+                logContainer.scrollTop = logContainer.scrollHeight;
+
+                await sleep(500);
+            }
+
+            const semChacara = Object.keys(PASTORES_DATA).filter(p => !wonSet.has(p));
+            if (semChacara.length > 0) {
+                logContainer.innerHTML += `
+                    <div class="log-entry" style="background: rgba(239,68,68,0.1); border-left-color: var(--red); margin-top: 16px;">
+                        <strong>Pastores sem chácara:</strong> ${semChacara.join(', ')}
+                    </div>`;
+            }
+
+            logContainer.innerHTML += `
+                <div class="log-entry" style="background: rgba(59,130,246,0.1); border-left-color: var(--accent); margin-top: 8px; text-align: center;">
+                    <strong>Sorteio concluído!</strong> ${sorteadosCount} pastores sorteados.
+                </div>`;
+
+            btn.style.display = 'none';
+            document.getElementById('btnReset').style.display = 'block';
+            sorteioConcluido = true;
+        }
+
+        function resetar() {
+            buildSlots();
+            renderSlots();
+            renderParticipants();
+            updateStats();
+            document.getElementById('btnSortear').style.display = 'block';
+            document.getElementById('btnSortear').disabled = false;
+            document.getElementById('btnSortear').textContent = 'Iniciar Sorteio';
+            document.getElementById('btnReset').style.display = 'none';
+            document.getElementById('logContainer').innerHTML =
+                '<p style="color: var(--text-muted); text-align: center; padding: 20px;">Clique em "Iniciar Sorteio" para começar</p>';
+        }
+
+        // Init
+        buildSlots();
+        renderSlots();
+        renderParticipants();
+        updateStats();
+    </script>
+</body>
+</html>
