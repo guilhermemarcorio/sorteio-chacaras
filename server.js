@@ -13,6 +13,7 @@ console.log('All DB vars:', Object.keys(process.env).filter(k => k.startsWith('D
 
 const pool = new Pool({
     connectionString: dbUrl,
+    ssl: { rejectUnauthorized: false },
     connectionTimeoutMillis: 10000,
 });
 
