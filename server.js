@@ -308,9 +308,19 @@ app.post('/api/seed', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-initDB().then(() => {
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-}).catch(err => {
-    console.error('DB init failed:', err);
+async function start() {
+    for (let i = 0; i < 5; i++) {
+        try {
+            await initDB();
+            app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+            return;
+        } catch (err) {
+            console.log(`DB connection attempt ${i + 1} failed, retrying in 3s...`);
+            await new Promise(r => setTimeout(r, 3000));
+        }
+    }
+    console.error('Could not connect to database after 5 attempts');
     process.exit(1);
-});
+}
+
+start();
