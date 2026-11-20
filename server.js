@@ -346,6 +346,14 @@ app.post('/api/seed', async (req, res) => {
     res.json({ ok: true, message: 'Dados carregados com sucesso' });
 });
 
+app.post('/api/seed/clear-old', async (req, res) => {
+    const datasValidas = ['24 a 26/12', '31/12 a 02/01', '08 a 10/01', '15 a 17/01', '22 a 24/01', '29 a 31/01'];
+    const placeholders = datasValidas.map((_, i) => `$${i + 1}`).join(', ');
+    await pool.query(`DELETE FROM preferencias WHERE slot_id IN (SELECT id FROM slots WHERE data NOT IN (${placeholders}))`, datasValidas);
+    const result = await pool.query(`DELETE FROM slots WHERE data NOT IN (${placeholders}) RETURNING id`, datasValidas);
+    res.json({ ok: true, deleted: result.rowCount });
+});
+
 const PORT = process.env.PORT || 3000;
 
 async function start() {
