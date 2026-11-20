@@ -248,23 +248,60 @@ app.delete('/api/sorteios/:id', async (req, res) => {
 // === SEED ===
 app.post('/api/seed', async (req, res) => {
     const chacaras = ['Recanto da Videira', 'Monte Sião 1', 'Monte Sião 2', 'Vinho Novo', 'Vinhedo'];
-    const datas = ['03 e 05/07', '10 e 12/07', '17 e 19/07', '24 e 26/07'];
-    const indisponiveis = ['Monte Sião 1|03 e 05/07', 'Monte Sião 2|03 e 05/07'];
+    const datas = ['24 a 26/12', '31/12 a 02/01', '08 a 10/01', '15 a 17/01', '22 a 24/01', '29 a 31/01'];
+    const indisponiveis = [];
 
-    const pastoresData = {
-        "Luis Queiroz": ["Vinho Novo 24 e 26/07", "Vinhedo 24 e 26/07"],
-        "Gabriel Santana": ["Recanto da Videira 10 e 12/07", "Monte Sião 1 10 e 12/07", "Monte Sião 2 10 e 12/07", "Vinho Novo 10 e 12/07", "Vinhedo 10 e 12/07"],
-        "Micael Vogel": ["Recanto da Videira 10 e 12/07", "Recanto da Videira 17 e 19/07", "Monte Sião 1 10 e 12/07", "Monte Sião 1 17 e 19/07", "Monte Sião 2 10 e 12/07", "Monte Sião 2 17 e 19/07", "Vinhedo 10 e 12/07", "Vinhedo 17 e 19/07"],
-        "Cleibson Marciano": ["Recanto da Videira 03 e 05/07", "Recanto da Videira 10 e 12/07", "Recanto da Videira 17 e 19/07", "Monte Sião 1 10 e 12/07", "Monte Sião 1 17 e 19/07", "Monte Sião 1 24 e 26/07", "Monte Sião 2 10 e 12/07", "Monte Sião 2 17 e 19/07", "Monte Sião 2 24 e 26/07", "Vinho Novo 03 e 05/07", "Vinho Novo 10 e 12/07", "Vinho Novo 17 e 19/07", "Vinho Novo 24 e 26/07", "Vinhedo 03 e 05/07", "Vinhedo 10 e 12/07", "Vinhedo 17 e 19/07", "Vinhedo 24 e 26/07"],
-        "Victor Luis": ["Recanto da Videira 10 e 12/07"],
-        "Leandro Feliciano": ["Recanto da Videira 10 e 12/07", "Recanto da Videira 17 e 19/07", "Monte Sião 1 10 e 12/07", "Monte Sião 1 17 e 19/07", "Monte Sião 1 24 e 26/07", "Monte Sião 2 10 e 12/07", "Monte Sião 2 17 e 19/07", "Monte Sião 2 24 e 26/07", "Vinho Novo 24 e 26/07", "Vinhedo 24 e 26/07"],
-        "Marcos Vinícius": ["Recanto da Videira 10 e 12/07", "Recanto da Videira 17 e 19/07", "Monte Sião 1 10 e 12/07", "Monte Sião 1 17 e 19/07", "Monte Sião 1 24 e 26/07", "Monte Sião 2 10 e 12/07", "Monte Sião 2 17 e 19/07", "Monte Sião 2 24 e 26/07", "Vinhedo 10 e 12/07", "Vinhedo 17 e 19/07", "Vinhedo 24 e 26/07"],
-        "Paulo Henrique": ["Recanto da Videira 17 e 19/07"],
-        "Vinicius": ["Recanto da Videira 10 e 12/07", "Monte Sião 1 10 e 12/07"],
-        "Obr Jonhy Henrique": ["Recanto da Videira 17 e 19/07", "Monte Sião 1 24 e 26/07", "Monte Sião 2 24 e 26/07", "Vinhedo 24 e 26/07"],
-        "Djalma Madureira": ["Monte Sião 1 24 e 26/07", "Monte Sião 2 24 e 26/07"],
-        "Ramon": ["Recanto da Videira 03 e 05/07", "Recanto da Videira 10 e 12/07", "Recanto da Videira 17 e 19/07", "Monte Sião 1 10 e 12/07", "Monte Sião 2 10 e 12/07", "Monte Sião 2 17 e 19/07"]
+    // PDF data: columns are períodos 24-26/12, 31/12-02/01, 08-10/01, 15-17/01, 22-24/01, 29-31/01
+    // Chácara names in PDF: "Recanto" = Recanto da Videira, "Monte Sião 01" = Monte Sião 1, etc.
+    const normalize = (ch) => {
+        if (ch.includes('Recanto')) return 'Recanto da Videira';
+        if (ch.includes('Monte Sião 01') || ch === 'Monte Sião 1') return 'Monte Sião 1';
+        if (ch.includes('Monte Sião 02') || ch === 'Monte Sião 2') return 'Monte Sião 2';
+        if (ch.includes('Vinho')) return 'Vinho Novo';
+        if (ch.includes('Vinhedo')) return 'Vinhedo';
+        return null;
     };
+
+    // Raw preferences from PDF: [nome, [chácaras por período]]
+    const rawData = [
+        { nome: "Luis Queiroz",                prefs: [["Vinhedo"], [], [], [], [], []] },
+        { nome: "Junior Peixoto",               prefs: [["Monte Sião 1","Monte Sião 2"], ["Monte Sião 2","Recanto"], [], ["Monte Sião 1","Monte Sião 2"], [], []] },
+        { nome: "Hugo Silva",                   prefs: [["Monte Sião 1","Monte Sião 2","Recanto","Vinho Novo","Vinhedo"], ["Monte Sião 1","Monte Sião 2","Vinho Novo","Vinhedo"], ["Monte Sião 2","Recanto","Vinho Novo","Vinhedo"], ["Monte Sião 1","Monte Sião 2","Recanto","Vinho Novo","Vinhedo"], ["Monte Sião 1","Monte Sião 2","Vinhedo"], []] },
+        { nome: "Lucas Rodrigues Martins Buzaim", prefs: [["Recanto"], [], [], [], [], []] },
+        { nome: "André Araújo Melo",            prefs: [["Monte Sião 1","Monte Sião 2","Recanto","Vinho Novo","Vinhedo"], ["Monte Sião 1","Monte Sião 2","Vinho Novo","Vinhedo"], ["Monte Sião 2","Recanto","Vinho Novo","Vinhedo"], ["Monte Sião 1","Monte Sião 2","Recanto","Vinho Novo","Vinhedo"], ["Monte Sião 1","Monte Sião 2","Vinhedo"], ["Vinho Novo","Vinhedo"]] },
+        { nome: "Abel Rocha",                   prefs: [["Monte Sião 1","Monte Sião 2","Recanto","Vinho Novo","Vinhedo"], ["Monte Sião 1","Monte Sião 2","Vinho Novo","Vinhedo"], ["Monte Sião 2","Recanto","Vinho Novo","Vinhedo"], ["Monte Sião 1","Monte Sião 2","Recanto","Vinho Novo"], ["Monte Sião 1","Monte Sião 2"], ["Vinho Novo"]] },
+        { nome: "Gabriel Santana",              prefs: [["Monte Sião 1","Monte Sião 2","Recanto"], ["Monte Sião 1","Monte Sião 2","Vinho Novo"], ["Monte Sião 2","Recanto"], ["Monte Sião 1","Monte Sião 2","Recanto"], ["Monte Sião 1","Monte Sião 2"], []] },
+        { nome: "Marco Aurélio Santana",        prefs: [["Monte Sião 1","Monte Sião 2","Recanto"], ["Monte Sião 1","Monte Sião 2"], ["Monte Sião 2","Recanto"], ["Monte Sião 1","Monte Sião 2","Recanto"], ["Monte Sião 1","Monte Sião 2"], []] },
+        { nome: "Marcos Vinícius Mota",         prefs: [["Monte Sião 1","Monte Sião 2","Recanto","Vinho Novo","Vinhedo"], ["Vinhedo"], ["Recanto","Vinhedo"], ["Monte Sião 1","Recanto","Vinhedo"], [], []] },
+        { nome: "Antonio Batista",              prefs: [["Recanto"], [], [], [], [], []] },
+        { nome: "Micael Vogel Carvalhaes",      prefs: [["Monte Sião 1","Monte Sião 2","Vinhedo"], ["Monte Sião 2","Recanto"], ["Monte Sião 1","Monte Sião 2","Recanto"], ["Monte Sião 1","Monte Sião 2"], [], []] },
+        { nome: "Vinicius",                     prefs: [["Recanto"], [], [], ["Monte Sião 1"], [], []] },
+        { nome: "Paulo Antônio Cardoso",        prefs: [["Monte Sião 1","Monte Sião 2","Vinho Novo","Vinhedo"], ["Monte Sião 1","Monte Sião 2","Vinhedo"], [], [], [], []] },
+        { nome: "Jonhy Henrique",               prefs: [["Recanto"], [], [], [], [], []] },
+        { nome: "Douglas Almeida",              prefs: [["Recanto"], [], [], [], [], []] },
+        { nome: "Gabriel Dias",                 prefs: [["Monte Sião 2","Recanto","Vinho Novo","Vinhedo"], ["Monte Sião 1","Monte Sião 2","Recanto","Vinho Novo","Vinhedo"], ["Monte Sião 1","Monte Sião 2","Vinhedo"], ["Vinho Novo","Vinhedo"], [], []] },
+        { nome: "Fabio Marin",                  prefs: [["Recanto"], ["Recanto"], [], ["Monte Sião 2"], [], []] },
+        { nome: "Arlan Oliveira",               prefs: [["Recanto"], ["Recanto"], ["Recanto"], [], [], []] },
+        { nome: "Cleibson Marciano",            prefs: [["Monte Sião 1","Monte Sião 2","Recanto","Vinho Novo","Vinhedo"], ["Monte Sião 1","Monte Sião 2","Vinho Novo","Vinhedo"], ["Monte Sião 2","Recanto","Vinho Novo","Vinhedo"], ["Monte Sião 1","Monte Sião 2","Recanto","Vinho Novo","Vinhedo"], ["Monte Sião 1","Monte Sião 2","Vinhedo"], ["Vinho Novo","Vinhedo"]] },
+        { nome: "Ramon José Menezes Dias",      prefs: [["Monte Sião 1","Monte Sião 2","Recanto"], ["Monte Sião 1","Monte Sião 2"], ["Monte Sião 2","Recanto"], ["Monte Sião 1","Monte Sião 2","Recanto"], ["Monte Sião 1","Monte Sião 2"], []] },
+        { nome: "Pr Gustavo Pereira",           prefs: [["Monte Sião 2"], [], ["Monte Sião 2"], [], [], []] },
+        { nome: "Aurélio Oponi da Silva Junior", prefs: [["Monte Sião 2","Recanto","Vinho Novo"], ["Monte Sião 1","Monte Sião 2","Recanto"], [], [], [], []] },
+        { nome: "Thiago Gonçalves",             prefs: [["Recanto"], [], [], [], [], []] },
+    ];
+
+    // Build pastoresData map: nome -> ["Chácara Data", ...]
+    const pastoresData = {};
+    for (const p of rawData) {
+        const slots = [];
+        p.prefs.forEach((chs, i) => {
+            const data = datas[i];
+            for (const ch of chs) {
+                const norm = normalize(ch);
+                if (norm) slots.push(`${norm} ${data}`);
+            }
+        });
+        pastoresData[p.nome] = slots;
+    }
 
     const chacaraIds = {};
     for (const ch of chacaras) {
