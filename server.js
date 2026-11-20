@@ -349,8 +349,13 @@ app.post('/api/seed', async (req, res) => {
 app.post('/api/seed/clear-old', async (req, res) => {
     const datasValidas = ['24 a 26/12', '31/12 a 02/01', '08 a 10/01', '15 a 17/01', '22 a 24/01', '29 a 31/01'];
     const placeholders = datasValidas.map((_, i) => `$${i + 1}`).join(', ');
-    await pool.query(`DELETE FROM preferencias WHERE slot_id IN (SELECT id FROM slots WHERE data NOT IN (${placeholders}))`, datasValidas);
-    const result = await pool.query(`DELETE FROM slots WHERE data NOT IN (${placeholders}) RETURNING id`, datasValidas);
+    const oldSlots = await pool.query(`SELECT id FROM slots WHERE data NOT IN (${placeholders})`, datasValidas);
+    if (oldSlots.rows.length === 0) return res.json({ ok: true, deleted: 0 });
+    const oldIds = oldSlots.rows.map(r => r.id);
+    const idPlaceholders = oldIds.map((_, i) => `$${i + 1}`).join(', ');
+    await pool.query(`DELETE FROM resultados WHERE slot_id IN (${idPlaceholders})`, oldIds);
+    await pool.query(`DELETE FROM preferencias WHERE slot_id IN (${idPlaceholders})`, oldIds);
+    const result = await pool.query(`DELETE FROM slots WHERE id IN (${idPlaceholders}) RETURNING id`, oldIds);
     res.json({ ok: true, deleted: result.rowCount });
 });
 
